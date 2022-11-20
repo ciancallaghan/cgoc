@@ -4,58 +4,59 @@ import os
 import socket
 import sys
 
-selector = ""
-host = ""
-port = 70
 clrf = "\r\n"
 
-def request():
+def request(selector, host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
-    s.send("\r\n".encode("utf-8"))
+    s.send((selector + clrf).encode("utf-8"))
     s.shutdown(1)
     return s.makefile("r")
 
-def view():
+def view(selector, host, port):
     content = []
-    page = request().read().split("\n")
+    page = request(selector, host, port).read().split("\n")
 
     for line in page:
         if (not line) or (line[0] == "."):
             continue
         else:
             linetype = line[0]
-            parts= line[1:].split("\t")
+            parts = line[1:].split("\t")
             parts.insert(0, linetype)
             content.append(parts)
+
     for line in content:
-        print(line)
+        if (line[0] == "i"):
+            print("\t" + line[1])
+        else:
+            print(line[0] + "\t" + line[1])
 
-def cgob():
-    global host
-
+def cgoc(selector, host, port):
     if (host):
-        view()
+        view(selector, host, port)
 
     while(True):
-        prompt = input("> ")
+        prompt = input("> ").strip()
         if (prompt == "q"):
             sys.exit()
         elif (prompt == "g"):
             host = input("hostname > ")
-            view()
+            view(selector, host, port)
         else:
             print("?")
 
 def main():
-    global host
+    host = ""
+    port = 70 
+    selector = ""
 
     args = sys.argv
 
     if (len(args) == 2):
         host = args[1]
 
-    cgob()
+    cgoc(selector, host, port)
 
 if (__name__ == "__main__"):
     main()
